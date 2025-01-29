@@ -1,0 +1,222 @@
+uL3zhzZGSxG2KRhKu6SW
+
+{
+    bind: {
+        title: 'Тест документа',
+    },
+    dockedItems: [
+        {
+            xtype: 'toolbar',
+            layout: {
+                type: 'hbox',
+            },
+            dock: 'bottom',
+            items: [
+                {
+                    xtype: 'button',
+                    text: 'Сохранить',
+                    handler: 'saveChain',
+                    ui: 'blue-button',
+                },
+                {
+                    xtype: 'button',
+                    text: 'Отменить',
+                    handler: 'close',
+                    ui: 'blue-button',
+                },
+            ],
+        },
+    ],
+    xtype: 'panel',
+    scrollable: true,
+    charTypes: {
+        'TEST-ADV': 'TEST_ADV',
+        'TEST-DFV': 'TEST_DFV',
+        'TEST-FKV': 'TEST_FKV',
+    },
+    items: [
+        {
+            xtype: 'panel',
+            margin: '10 0 10 0',
+            layout: {
+                type: 'vbox',
+                align: 'stretch',
+            },
+            items: [
+                {
+                    xtype: 'panel',
+                    flex: 2,
+                    margin: '10 0 10 0',
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch',
+                    },
+                    items: [
+                        {
+                            xtype: 'numberfield',
+                            fieldLabel: 'Номер документа',
+                            flex: 1,
+                            bind: {
+                                value: '{billingDocumentNumber}',
+                            },
+                        },
+                        {
+                            xtype: 'datefield',
+                            fieldLabel: 'Дата документа',
+                            flex: 1,
+                            format: 'd.m.Y',
+                            bind: {
+                                value: '{billingDocumentDate}',
+                            },
+                        },
+                        {
+                            xtype: 'textfield',
+                            fieldLabel: 'Назначение',
+                            flex: 1,
+                            bind: {
+                                value: '{TEST_ADV}',
+                            },
+                        },
+                        {
+                            xtype: 'SimplestReportCombo',
+                            flex: 1,
+                            fieldLabel: 'Вид документа',
+                            reportId: 'CHAR_VAL_LIST',
+                            displayField: 'VALUE',
+                            valueField: 'KEY',
+                            defaultParameters: {
+                                CHAR_TYPE_CD: 'TEST-DFV',
+                            },
+                            bind: {
+                                value: '{TEST_DFV}',
+                            },
+                        },
+                        {
+                            xtype: 'textfield',
+                            fieldLabel: 'Сканкопия',
+                            editable: false,
+                            hidden: true,
+                            flex: 1,
+                            triggers: {
+                                open: {
+                                    cls: 'svg-icon svg-icon-clip',
+                                    handler: 'uploadFile',
+                                    tooltip: 'Прикрепить файл',
+                                },
+                                download: {
+                                    cls: 'svg-icon svg-icon-download',
+                                    handler: 'downloadFile',
+                                    tooltip: 'Скачать файл',
+                                },
+                                clean: {
+                                    cls: 'svg-icon svg-icon-cancel-small',
+                                    handler: 'cleanFile',
+                                    tooltip: 'Открепить файл',
+                                },
+                            },
+                            bind: '{file.originalFileName}',
+                        },
+                    ],
+                },
+                {
+                    xtype: 'panel',
+                    flex: 2,
+                    margin: '0 0 10 0',
+                    layout: {
+                        type: 'hbox',
+                        align: 'stretch',
+                    },
+                    items: [
+                        {
+                            xtype: 'textfield',
+                            fieldLabel: 'Здание',
+                            readOnly: false,
+                            editable: false,
+                            flex: 0.5,
+                            bind: {
+                                value: '{prem.ADDR}',
+                            },
+                            triggers: {
+                                open: {
+                                    cls: 'svg-icon svg-icon-magnifying-glass',
+                                    handler: 'goToPrem',
+                                },
+                                clean: {
+                                    cls: 'svg-icon svg-icon-cancel-small',
+                                    handler: 'cleanPrem',
+                                },
+                            },
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+}
+
+
+
+
+
+git token - TU3xA_pNjuMPKy8MBX_H
+
+
+
+import React, { useState } from 'react';
+import Uppy from '@uppy/core';
+import DragDrop from '@uppy/drag-drop';
+import XHRUpload from '@uppy/xhr-upload';
+import '@uppy/core/dist/style.css';
+import '@uppy/drag-drop/dist/style.css';
+import ProgressBar from 'react-tailwindcss-progress-bar';
+
+const DragDropComponent = () => {
+  const [progress, setProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const uppy = new Uppy({
+    meta: {},
+    restrictions: {
+      maxNumberOfFiles: 1,
+      allowedFileTypes: ['image/*', '.pdf'],
+    },
+  });
+
+  uppy.use(DragDrop, {
+    target: '#dragdrop',
+    width: '100%',
+    height: '300px',
+    note: 'Drag and drop images or PDF files here',
+  });
+
+  uppy.use(XHRUpload, {
+    endpoint: '/api/upload',
+    formData: true,
+    fieldName: 'files[]',
+  });
+
+  uppy.on('upload-progress', (file, progress) => {
+    setProgress(progress);
+    setIsUploading(true);
+  });
+
+  uppy.on('complete', () => {
+    setIsUploading(false);
+    setProgress(0);
+  });
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen">
+      <div id="dragdrop"></div>
+      {isUploading && (
+        <ProgressBar
+          percentage={progress}
+          height="6px"
+          className="mt-4 w-full"
+        />
+      )}
+    </div>
+  );
+};
+
+export default DragDropComponent;
